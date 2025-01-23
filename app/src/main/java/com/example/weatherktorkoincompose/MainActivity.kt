@@ -1,25 +1,30 @@
 package com.example.weatherktorkoincompose
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.weatherktorkoincompose.model.ForecastResponse
 import com.example.weatherktorkoincompose.ui.theme.Background
 import com.example.weatherktorkoincompose.ui.theme.WeatherKtorKoinComposeTheme
 
@@ -27,9 +32,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val repository = Repository()
+        val viewModel = MainViewModel(repository)
+        viewModel.loadData()
+
         setContent {
-            val viewModel: MainViewModel = viewModel()
             val scrollState = rememberLazyListState()
+            val uiState by viewModel.forecast.collectAsState()
 
             WeatherKtorKoinComposeTheme {
                 Scaffold(
@@ -37,29 +47,50 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(Background)
                 ) { innerPadding ->
-                    val state = viewModel.forecast.collectAsState()
 
                     Column(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        state.value.city?.name?.let {
-                            Text(
-                                text = it,
-                                modifier = Modifier.padding(top = 16.dp, start = 16.dp),
-                                color = Color.Black,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
-                        state.value.forecasts?.let { forecasts ->
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                state = scrollState
-                            ) {
-                                itemsIndexed(items = forecasts, itemContent = { index, forecast ->
-                                    ForecastItem(forecast)
-                                })
+
+                        when (uiState) {
+                            is ResultState.Loading -> {
+                                Log.i("mLog", "Loading")
+                                CircularProgressIndicator()
                             }
+
+                            is ResultState.Success -> {
+                                Log.i("mLog", "Success ${(uiState as ResultState.Success<ForecastResponse>).data}")
+                                val forecastResponse =
+                                    (uiState as ResultState.Success<ForecastResponse>).data
+
+                                forecastResponse.city?.name?.let {
+                                    Text(
+                                        text = it,
+                                        modifier = Modifier.padding(top = 16.dp, start = 16.dp),
+                                        color = Color.Black,
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                                forecastResponse.forecasts?.let { forecasts ->
+                                    LazyColumn(
+                                        modifier = Modifier.fillMaxSize(),
+                                        state = scrollState
+                                    ) {
+                                        itemsIndexed(
+                                            items = forecasts,
+                                            itemContent = { index, forecast ->
+                                                ForecastItem(forecast)
+                                            })
+                                    }
+                                }
+                            }
+
+                            is ResultState.Error -> Log.e("mLog", "Error ${(uiState as ResultState.Error).message}")
                         }
                     }
                 }
