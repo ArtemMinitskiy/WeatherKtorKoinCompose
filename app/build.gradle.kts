@@ -68,6 +68,11 @@ dependencies {
     //Lottie
     implementation(libs.lottie.compose)
 
+    // Koin
+    implementation(libs.koin.android)
+    implementation(libs.insert.koin.koin.androidx.compose)
+    implementation(libs.insert.koin.koin.core)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -27,18 +27,16 @@ import androidx.compose.ui.unit.sp
 import com.example.weatherktorkoincompose.model.ForecastResponse
 import com.example.weatherktorkoincompose.ui.theme.Background
 import com.example.weatherktorkoincompose.ui.theme.WeatherKtorKoinComposeTheme
+import org.koin.androidx.compose.koinViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val repository = Repository()
-        val viewModel = MainViewModel(repository)
-        viewModel.loadData()
-
         setContent {
             val scrollState = rememberLazyListState()
+            val viewModel: MainViewModel = koinViewModel()
             val uiState by viewModel.forecast.collectAsState()
 
             WeatherKtorKoinComposeTheme {
@@ -63,7 +61,10 @@ class MainActivity : ComponentActivity() {
                             }
 
                             is ResultState.Success -> {
-                                Log.i("mLog", "Success ${(uiState as ResultState.Success<ForecastResponse>).data}")
+                                Log.i(
+                                    "mLog",
+                                    "Success ${(uiState as ResultState.Success<ForecastResponse>).data}"
+                                )
                                 val forecastResponse =
                                     (uiState as ResultState.Success<ForecastResponse>).data
 
@@ -90,7 +91,10 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
-                            is ResultState.Error -> Log.e("mLog", "Error ${(uiState as ResultState.Error).message}")
+                            is ResultState.Error -> Log.e(
+                                "mLog",
+                                "Error ${(uiState as ResultState.Error).message}"
+                            )
                         }
                     }
                 }

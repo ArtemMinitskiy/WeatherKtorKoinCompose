@@ -11,11 +11,15 @@ class MainViewModel(private val repository: Repository) : ViewModel() {
     private val _forecast = MutableStateFlow<ResultState<ForecastResponse>>(ResultState.Loading)
     val forecast: StateFlow<ResultState<ForecastResponse>> get() = _forecast
 
-    fun loadData() {
+    private fun loadData() {
         viewModelScope.launch {
             repository.fetchFiveDayForecast().collect { result ->
                 _forecast.value = result
             }
         }
+    }
+
+    init {
+        loadData()
     }
 }
