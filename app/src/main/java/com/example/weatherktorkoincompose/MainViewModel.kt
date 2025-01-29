@@ -2,7 +2,9 @@ package com.example.weatherktorkoincompose
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.weatherktorkoincompose.Constants.DOWNLOAD_LINK
 import com.example.weatherktorkoincompose.model.ForecastResponse
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -19,7 +21,14 @@ class MainViewModel(private val repository: Repository) : ViewModel() {
         }
     }
 
+    private fun download(url: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.downloadFile(url)
+        }
+    }
+
     init {
         loadData()
+        download(DOWNLOAD_LINK)
     }
 }
